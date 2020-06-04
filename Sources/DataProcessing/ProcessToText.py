@@ -1,12 +1,11 @@
-import nltk
+import os
+from zipfile import ZipFile
+
 from nltk.collocations import *
 from nltk.corpus import stopwords
-import convokit
-from convokit import Corpus, download, FightingWords
+import convokit.util
 import json
 import re
-import string
-import os
 from os import path
 
 user_pattern = re.compile("/u/")
@@ -20,20 +19,21 @@ regionalisms = set()
 ###############################################
 #### derive file names
 ###############################################
+def getTextFileNames(corpusname, filtered=True):
+    outputBasefilename = "../../data/ProcessedData/" + corpusname
+    filenames = [outputBasefilename + "_cmt_nomention.txt",
+            outputBasefilename + "_cmt_mention.txt",
+            outputBasefilename + "_pst_nomention.txt",
+            outputBasefilename + "_pst_mention.txt"]
 
-def getUnfilteredTextFilename(corpusfile, corpusname):
-    outputBasefilename = corpusfile[:len(corpusfile)-ufilelen]+corpusname
-    return [outputBasefilename+"_cmt_nomention.txt",
-            outputBasefilename+"_cmt_mention.txt",
-            outputBasefilename+"_pst_nomention.txt",
-            outputBasefilename+"_pst_mention.txt"]
+    if(filtered):
+        unfilteredFileNames = filenames.copy()
+        filenames = []
+        for c_filename in unfilteredFileNames:
+            nameinsert_index = c_filename.rfind("/")
+            filenames.append(c_filename[:nameinsert_index+1] + "filtered_" + c_filename[nameinsert_index+1:])
+    return filenames
 
-def getFilteredTextFilename(corpusfile, corpusname):
-    filteredfilename = list()
-    for c_filename in getUnfilteredTextFilename(corpusfile, corpusname):
-        nameinsert_index = c_filename.rfind("/")
-        filteredfilename.append(c_filename[:nameinsert_index+1] + "filtered_" + c_filename[nameinsert_index+1:])
-    return filteredfilename
 
 
 ###############################################
@@ -49,17 +49,17 @@ def mentionsUser(comment):
 ###############################################
 #### stopword removal
 ###############################################
-def addStopWords():
+def addStopWords(extrastopfile=["../../data/supplementalremovedwords.txt"]):
     global stopwords
     readRegionalisms()
-    
-    extrastopfile = "data/supplementalremovedwords.txt"
-    extrastopfile = open(extrastopfile, "r")
-    extrastopfile_text = extrastopfile.read()
-    extrastopfile.close()
 
-    #filter out regionalims from the stop words
-    stopwords.union(set(extrastopfile_text.split()))
+    for stopwordfile in extrastopfile:
+        extrastopfile = open(extrastopfile, "r")
+        extrastopfile_text = extrastopfile.read()
+        extrastopfile.close()
+        # filter out regionalims from the stop words
+        stopwords.union(set(extrastopfile_text.split()))
+
     local_copy = regionalisms.copy()
 
     #avoid filtering out part of a regionalism if it's two words
@@ -70,7 +70,7 @@ def addStopWords():
 
 
 def readRegionalisms():
-    regionalisms_file = open("data/regionalisms.txt","r+")
+    regionalisms_file = open("../../data/regionalisms.txt", "r+")
     for word in regionalisms_file.readlines():
         regionalisms.add(word)
     regionalisms_file.close()
@@ -150,7 +150,7 @@ def convertToText(filename, corpusname):
 
 #re-process text files to adjust stopword removal
 def removeStopwordsFromConverted(filename, corpusname):
-    for file in getUnprocessedTextFilename(filename, corpusname):
+    for file in getTextFileNames(filename, corpusname, filtered=False):
         if(path.exists(file)):
             removestopwords(file)
     return
@@ -159,11 +159,11 @@ def removeStopwordsFromConverted(filename, corpusname):
 
 def main():
     addStopWords()
+    datadirectory = "../../data"
 
-
-    processed = [ ]
+    toProcess = [("path", "furry"), ("path","furry_irl")]
     #[("subreddit/file/path", "name")]
-    toProcess = [("data/California/LosAngeles.corpus/"+ufile, "LA"),
+    processed = [("data/California/LosAngeles.corpus/"+ufile, "LA"),
                  ("data/Pennsylvania/philadelphia.corpus/"+ufile, "philly"),
                  ("data/Georgia/Atlanta.corpus/"+ufile, "atlanta"),
                  ("data/DC/washingtondc.corpus/"+ufile, "DC"),
@@ -181,8 +181,21 @@ def main():
                  ("data/Illinois/chicago.corpus/"+ufile, "Chicago"),
                  ("data/Illinois/chicagogamers.corpus/"+ufile, "Chicago_gamers")
                  ]
-    for fileinfo in toProcess:
-        print("doing, "+fileinfo[1])
+
+    toProcess = ["furry_irl", "furry"]
+    for corpusname in toProcess:
+        print("doing, "+corpusname)
+        convokit.util.download("subreddit-"+corpusname, data_dir=datadirectory+"/DataDownloads", use_local=True)
+
+        #create the directory
+        if not os.path.exists(datadirectory+"/ProcessedData/"+corpusname):
+            os.makedirs(datadirectory+"/ProcessedData/"+corpusname)
+
+        with ZipFile(datadirectory+"/DataDownloads/"+"subreddit-"+corpusname+".corpus.zip") as corpuszip:
+            if not os.path.exists(datadirectory+"/ProcessedData/"+corpusname+"/utterances.jsonl"):
+                with corpuszip.open() as corpuszipopen:
+                    corpuszipopen.extract("utterances.jsonl", path=datadirectory+"/ProcessedData/"+corpusname+"/")
+
         #convertToText(fileinfo[0], fileinfo[1])
         #removeStopwordsFromConverted(fileinfo[0], fileinfo[1])
         

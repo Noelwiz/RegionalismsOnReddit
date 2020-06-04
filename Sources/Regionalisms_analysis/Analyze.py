@@ -21,7 +21,7 @@ ufilelen = len(ufile)
 
 
 def readRegionalisms():
-    regionalisms_file = open("data/regionalisms.txt","r+")
+    regionalisms_file = open("../../data/regionalisms.txt", "r+")
     for word in regionalisms_file.readlines():
         regionalisms.add(word.strip())
     regionalisms_file.close()

@@ -41,8 +41,8 @@ def collectAudienceFreqData(file_name):
         # https://waymoot.org/home/python_string/
         # should be credited for this odd joining method
         current_comment = []
-
-        for line in current_file.readlines():
+        print("reading lines")
+        for line in current_file:
             c_partition = line.partition("<end_comment>")
             current_comment.append(c_partition[0])
 
@@ -99,7 +99,7 @@ def analyzeAudienceData(corpuslist, outfilename="results_audience"):
 def collectFreqData(file_name):
     fqdist = FreqDist()
     with open(file_name, "r") as current_file:
-        for line in current_file.readlines():
+        for line in current_file:
             for word in line.split():
                 fqdist[word] = fqdist.get(word, 0) + 1
     return fqdist

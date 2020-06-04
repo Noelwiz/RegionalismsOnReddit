@@ -21,7 +21,7 @@ stopwords = set(stopwords.words('english'))
 ###############################################
 def mentionsUser(comment):
     #if it includes "/u/"
-    if(None == user_pattern.search(comment)):
+    if None == user_pattern.search(comment):
         return False
     else:
         return True
@@ -48,7 +48,7 @@ def addStopWords(extrastopfile="../../data/supplementalremovedwords.txt"):
 
 def removestopwords(filename):
     global stopwords
-    if(stopwords == None):
+    if stopwords == None:
         stopwords = set(stopwords.words('english'))
         addStopWords()
         
@@ -57,15 +57,14 @@ def removestopwords(filename):
     filtered = open(filename[:nameinsert_index+1] + "filtered_" + filename[nameinsert_index+1:], "a+",  errors='ignore')
 
     with open(filename, "r") as current_file:
-        for line in current_file.readlines():
-            if(len(line) > 0 and line != "[deleted] <end_comment>"):
+        for line in current_file:
+            if len(line) > 0 and line != "[deleted] <end_comment>":
                 ##hopefully not a new line
                 line = line.split()
                 for word in line:
                     if not word in stopwords:
                         filtered.write(word+" ", )
                 filtered.write("\n")
-
     filtered.close()
 
 
@@ -80,12 +79,12 @@ def convertToText(corpusname, downcase=True, includebots=False, keepStickied=Tru
     :return:
     """
     with open(datadirectory+"/ProcessedData/"+corpusname+"/utterances.jsonl", "r", errors='ignore', encoding="'utf-8'") as corpus_file:
-        for jsonline in corpus_file.readlines():
+        for jsonline in corpus_file:
             current = json.loads(jsonline)
             comment = current["text"]
 
             #normalize
-            if(downcase):
+            if downcase:
                 comment = comment.lower()
             comment = comment.strip()
 
@@ -94,7 +93,7 @@ def convertToText(corpusname, downcase=True, includebots=False, keepStickied=Tru
             metadata = current["meta"]
             ispost = (None == metadata["top_level_comment"])
 
-            if(not includebots):
+            if not includebots:
                 isbot = False
 
                 #check if automod
@@ -103,31 +102,30 @@ def convertToText(corpusname, downcase=True, includebots=False, keepStickied=Tru
 
                 #checkifbot
                 flare = metadata.get("author_flair_text")
-                if(len(flare) > 0):
+                if len(flare) > 0:
                     flare = flare.lower()
-                    if(flare.endswith("bot")):
+                    if flare.endswith("bot"):
                         isbot = True
 
                 if(isbot):
                     continue
 
-
             if not keepStickied:
                 #check if stickied
-                if(metadata.get("stickied")):
+                if metadata.get("stickied"):
                     continue
 
 
             #catagorize
-            if(ispost):
-                if(mention):
+            if ispost:
+                if mention:
                     #post and mention
                     textfile = open(datadirectory+"/ProcessedData/" + corpusname+"_pst_mention.txt", "a+", errors='ignore')
                 else:
                     #post no mention
                     textfile = open(datadirectory+"/ProcessedData/" + corpusname+"_pst_nomention.txt", "a+", errors='ignore')
             else:
-                if(mention):
+                if mention:
                     #not most yes mention
                     textfile = open(datadirectory+"/ProcessedData/" + corpusname+"_cmt_mention.txt", "a+",  errors='ignore')
                 else:
@@ -141,7 +139,7 @@ def convertToText(corpusname, downcase=True, includebots=False, keepStickied=Tru
 #re-process text files to adjust stopword removal
 def removeStopwordsFromConverted(corpusname):
     for file in getTextFileNames(corpusname, filtered=False):
-        if(path.exists(file)):
+        if path.exists(file):
             removestopwords(file)
     return
     
@@ -170,7 +168,7 @@ def main():
         #make the unfilted text files
         old_data_exists = False
         for file in getTextFileNames(corpusname, filtered=False):
-            if(os.path.exists(file)):
+            if os.path.exists(file):
                 old_data_exists = True
 
         if not old_data_exists:
@@ -181,7 +179,7 @@ def main():
         # remove stopwords
         old_data_exists = False
         for file in getTextFileNames(corpusname):
-            if(os.path.exists(file)):
+            if os.path.exists(file):
                 old_data_exists = True
 
         if not old_data_exists:
@@ -192,7 +190,3 @@ def main():
         
 if __name__ == "__main__":
     main()
-
-
-
-        

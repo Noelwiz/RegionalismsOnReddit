@@ -1,13 +1,15 @@
 import os
 from zipfile import ZipFile
 
-from nltk.collocations import *
+from convokit import Corpus, download
+
 from nltk.corpus import stopwords
 import convokit.util
 import json
 import re
 from os import path
 
+datadirectory = "../../data"
 user_pattern = re.compile("/u/")
 ufile = "utterances.jsonl"
 ufilelen = len(ufile)
@@ -20,7 +22,7 @@ regionalisms = set()
 #### derive file names
 ###############################################
 def getTextFileNames(corpusname, filtered=True):
-    outputBasefilename = "../../data/ProcessedData/" + corpusname
+    outputBasefilename = datadirectory+"/ProcessedData/" + corpusname
     filenames = [outputBasefilename + "_cmt_nomention.txt",
             outputBasefilename + "_cmt_mention.txt",
             outputBasefilename + "_pst_nomention.txt",
@@ -49,16 +51,15 @@ def mentionsUser(comment):
 ###############################################
 #### stopword removal
 ###############################################
-def addStopWords(extrastopfile=["../../data/supplementalremovedwords.txt"]):
+def addStopWords(extrastopfile="../../data/supplementalremovedwords.txt"):
     global stopwords
     readRegionalisms()
 
-    for stopwordfile in extrastopfile:
-        extrastopfile = open(extrastopfile, "r")
-        extrastopfile_text = extrastopfile.read()
-        extrastopfile.close()
-        # filter out regionalims from the stop words
-        stopwords.union(set(extrastopfile_text.split()))
+    extrastopfile = open(extrastopfile, "r+")
+    extrastopfile_text = extrastopfile.read()
+    extrastopfile.close()
+    # filter out regionalims from the stop words
+    stopwords.union(set(extrastopfile_text.split()))
 
     local_copy = regionalisms.copy()
 
@@ -82,7 +83,6 @@ def removestopwords(filename):
     if(stopwords == None):
         stopwords = set(stopwords.words('english'))
         addStopWords()
-
         
     nameinsert_index = filename.rfind("/")
     print("sending normalized values of " + filename + " to "+ filename[:nameinsert_index+1] + "filtered_" + filename[nameinsert_index+1:])
@@ -101,56 +101,78 @@ def removestopwords(filename):
     filtered.close()
 
 
-    
 ###############################################
 #### Process to Textfile
 ###############################################
-
-def convertToText(filename, corpusname):
-    outputBasefilename = filename[:len(filename)-ufilelen]+corpusname
-    with open(filename, "r", errors='ignore', encoding="'utf-8'") as corpus_file:
+def convertToText(corpusname, downcase=True, includebots=False, keepStickied=True):
+    """
+    convert a corpus, assuming the .utterences file has been extracted, to 4 text files
+    :param corpusname:
+    :param downcase:
+    :return:
+    """
+    with open(datadirectory+"/ProcessedData/"+corpusname+"/utterances.jsonl", "r", errors='ignore', encoding="'utf-8'") as corpus_file:
         for jsonline in corpus_file.readlines():
             current = json.loads(jsonline)
-            #normalize
             comment = current["text"]
-            comment = comment.lower()
+
+            #normalize
+            if(downcase):
+                comment = comment.lower()
             comment = comment.strip()
+
             #check if mentions user
             mention = mentionsUser(comment)
             metadata = current["meta"]
             ispost = (None == metadata["top_level_comment"])
+
+            if(not includebots):
+                isbot = False
+
+                #check if automod
+                isAutomod = current["user"] == "AutoMod"
+                isbot = isbot and not isAutomod
+
+                #checkifbot
+                flare = metadata.get("author_flair_text")
+                if(len(flare) > 0):
+                    flare = flare.lower()
+                    if(flare.endswith("bot")):
+                        isbot = True
+
+                if(isbot):
+                    continue
+
+
+            if not keepStickied:
+                #check if stickied
+                if(metadata.get("stickied")):
+                    continue
+
+
             #catagorize
             if(ispost):
                 if(mention):
                     #post and mention
-                    textfile = open(outputBasefilename+"_pst_mention.txt", "a+", errors='ignore')
+                    textfile = open(datadirectory+"/ProcessedData/" + corpusname+"_pst_mention.txt", "a+", errors='ignore')
                 else:
                     #post no mention
-                    textfile = open(outputBasefilename+"_pst_nomention.txt", "a+", errors='ignore')
+                    textfile = open(datadirectory+"/ProcessedData/" + corpusname+"_pst_nomention.txt", "a+", errors='ignore')
             else:
                 if(mention):
                     #not most yes mention
-                    textfile = open(outputBasefilename+"_cmt_mention.txt", "a+",  errors='ignore')
+                    textfile = open(datadirectory+"/ProcessedData/" + corpusname+"_cmt_mention.txt", "a+",  errors='ignore')
                 else:
                     #no post no mention
-                    textfile = open(outputBasefilename+"_cmt_nomention.txt", "a+",  errors='ignore')
+                    textfile = open(datadirectory+"/ProcessedData/" + corpusname+"_cmt_nomention.txt", "a+",  errors='ignore')
             #save to text file
             textfile.write(comment+" <end_comment>\n")
             textfile.close()
-            
-    #remove stopwords
-    if(path.exists(outputBasefilename+"_cmt_nomention.txt")):
-        removestopwords(outputBasefilename+"_cmt_nomention.txt")
-    if(path.exists(outputBasefilename+"_cmt_mention.txt")):
-        removestopwords(outputBasefilename+"_cmt_mention.txt")
-    if(path.exists(outputBasefilename+"_pst_nomention.txt")):
-        removestopwords(outputBasefilename+"_pst_nomention.txt")
-    if(path.exists(outputBasefilename+"_pst_mention.txt")):
-        removestopwords(outputBasefilename+"_pst_mention.txt")
+
 
 #re-process text files to adjust stopword removal
-def removeStopwordsFromConverted(filename, corpusname):
-    for file in getTextFileNames(filename, corpusname, filtered=False):
+def removeStopwordsFromConverted(corpusname):
+    for file in getTextFileNames(corpusname, filtered=False):
         if(path.exists(file)):
             removestopwords(file)
     return
@@ -158,46 +180,45 @@ def removeStopwordsFromConverted(filename, corpusname):
 
 
 def main():
+    #initalize globals
+    readRegionalisms()
     addStopWords()
-    datadirectory = "../../data"
 
-    toProcess = [("path", "furry"), ("path","furry_irl")]
-    #[("subreddit/file/path", "name")]
-    processed = [("data/California/LosAngeles.corpus/"+ufile, "LA"),
-                 ("data/Pennsylvania/philadelphia.corpus/"+ufile, "philly"),
-                 ("data/Georgia/Atlanta.corpus/"+ufile, "atlanta"),
-                 ("data/DC/washingtondc.corpus/"+ufile, "DC"),
-                 ("data/Florida/Miami.corpus/"+ufile, "Miami"),
-                 ("data/Florida/"+"florida.corpus/" + ufile, "Florida"),
-                 ("data/Massachusetts/boston.corpus/"+ufile, "Boston"),
-                 ("data/Florida/Tallahassee.corpus/" + ufile, "Tallahassee"),
-                 ("data/Massachusetts/BostonGaymers.corpus/"+ufile, "Boston_gaymers"),
-                 ("data/NewYork/nyc.corpus/"+ufile, "NewYorkCity"),
-                 ("data/NewYork/nycgaymers.corpus/"+ufile, "NewYorkCity_gaymers"),
-                 ("data/Texas/Dallas.corpus/"+ufile, "Dallas"),
-                 ("data/Texas/Houston/houston.corpus/"+ufile, "Houston"),
-                 ("data/Texas/Houston/houstontx.corpus/"+ufile, "Houstontx"),
-                 ("data/Texas/Houston/houstongamers.corpus/"+ufile, "Houston_gamers"),
-                 ("data/Illinois/chicago.corpus/"+ufile, "Chicago"),
-                 ("data/Illinois/chicagogamers.corpus/"+ufile, "Chicago_gamers")
-                 ]
-
-    toProcess = ["furry_irl", "furry"]
+    toProcess = ["furry_irl", "furry", "yiff"]
     for corpusname in toProcess:
         print("doing, "+corpusname)
-        convokit.util.download("subreddit-"+corpusname, data_dir=datadirectory+"/DataDownloads", use_local=True)
+        download("subreddit-"+corpusname, data_dir=datadirectory+"/DataDownloads")
 
         #create the directory
         if not os.path.exists(datadirectory+"/ProcessedData/"+corpusname):
             os.makedirs(datadirectory+"/ProcessedData/"+corpusname)
 
-        with ZipFile(datadirectory+"/DataDownloads/"+"subreddit-"+corpusname+".corpus.zip") as corpuszip:
+        with ZipFile(datadirectory+"/DataDownloads/"+corpusname+".corpus.zip", mode="r") as corpuszip:
             if not os.path.exists(datadirectory+"/ProcessedData/"+corpusname+"/utterances.jsonl"):
-                with corpuszip.open() as corpuszipopen:
-                    corpuszipopen.extract("utterances.jsonl", path=datadirectory+"/ProcessedData/"+corpusname+"/")
+                corpuszip.extract("utterances.jsonl", path=datadirectory+"/ProcessedData/"+corpusname+"/")
 
-        #convertToText(fileinfo[0], fileinfo[1])
-        #removeStopwordsFromConverted(fileinfo[0], fileinfo[1])
+
+        #make the unfilted text files
+        old_data_exists = False
+        for file in getTextFileNames(corpusname, filtered=False):
+            if(os.path.exists(file)):
+                old_data_exists = True
+
+        if not old_data_exists:
+            convertToText(corpusname)
+        else:
+            print(corpusname + " has already been converted to unfiltered text files, moving on")
+
+        # remove stopwords
+        old_data_exists = False
+        for file in getTextFileNames(corpusname):
+            if(os.path.exists(file)):
+                old_data_exists = True
+
+        if not old_data_exists:
+            removeStopwordsFromConverted(corpusname)
+        else:
+            print(corpusname + " has already had its text files filtered")
         
         
 if __name__ == "__main__":

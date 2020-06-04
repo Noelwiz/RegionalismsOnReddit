@@ -1,1 +1,4 @@
-/data/DataDownloads/*.corpus.zip
+/data/DataDownloads/*.zip
+/data/DataDownloads/*/*
+/data/ProcessedData/*.txt
+/data/ProcessedData/*/*

@@ -316,10 +316,11 @@ def main():
     readRegionalisms()
     # to select subreddits to process, add their name to the CurrentSubredditSet file
     toAnalyze = readSubredditSet()
+    print(toAnalyze)
     analyzeAudienceData(toAnalyze)
     analyzeFrequencyData(toAnalyze)
     analyzeStatsData(toAnalyze)
-    #analyzeCountData(toAnalyze)
+    analyzeCountData(toAnalyze)
 
 
 if __name__ == "__main__":

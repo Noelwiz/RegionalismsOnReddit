@@ -1,42 +1,20 @@
 import os
 from zipfile import ZipFile
 
-from convokit import Corpus, download
+from convokit import download
 
 from nltk.corpus import stopwords
-import convokit.util
 import json
 import re
 from os import path
 
-datadirectory = "../../data"
+from UtilityFunctions import getTextFileNames, readSubredditSet, datadirectory, readRegionalisms
+
 user_pattern = re.compile("/u/")
 ufile = "utterances.jsonl"
 ufilelen = len(ufile)
-
+datadirectory = "../../data"
 stopwords = set(stopwords.words('english'))
-regionalisms = set()
-
-
-###############################################
-#### derive file names
-###############################################
-def getTextFileNames(corpusname, filtered=True):
-    outputBasefilename = datadirectory+"/ProcessedData/" + corpusname
-    filenames = [outputBasefilename + "_cmt_nomention.txt",
-            outputBasefilename + "_cmt_mention.txt",
-            outputBasefilename + "_pst_nomention.txt",
-            outputBasefilename + "_pst_mention.txt"]
-
-    if(filtered):
-        unfilteredFileNames = filenames.copy()
-        filenames = []
-        for c_filename in unfilteredFileNames:
-            nameinsert_index = c_filename.rfind("/")
-            filenames.append(c_filename[:nameinsert_index+1] + "filtered_" + c_filename[nameinsert_index+1:])
-    return filenames
-
-
 
 ###############################################
 #### catagorize
@@ -53,7 +31,7 @@ def mentionsUser(comment):
 ###############################################
 def addStopWords(extrastopfile="../../data/supplementalremovedwords.txt"):
     global stopwords
-    readRegionalisms()
+    regionalisms = readRegionalisms()
 
     extrastopfile = open(extrastopfile, "r+")
     extrastopfile_text = extrastopfile.read()
@@ -61,22 +39,12 @@ def addStopWords(extrastopfile="../../data/supplementalremovedwords.txt"):
     # filter out regionalims from the stop words
     stopwords.union(set(extrastopfile_text.split()))
 
-    local_copy = regionalisms.copy()
-
     #avoid filtering out part of a regionalism if it's two words
-    for word in local_copy:
-        local_copy.union(set(word.split()))
+    for word in regionalisms:
+        regionalisms.union(set(word.split()))
         
     stopwords.difference_update(regionalisms)
 
-
-def readRegionalisms():
-    regionalisms_file = open("../../data/regionalisms.txt", "r+")
-    for word in regionalisms_file.readlines():
-        regionalisms.add(word)
-    regionalisms_file.close()
-
-    
 
 def removestopwords(filename):
     global stopwords
@@ -184,7 +152,8 @@ def main():
     readRegionalisms()
     addStopWords()
 
-    toProcess = ["furry_irl", "furry", "yiff"]
+    #to select subreddits to process, add their name to the CurrentSubredditSet file
+    toProcess = readSubredditSet()
     for corpusname in toProcess:
         print("doing, "+corpusname)
         download("subreddit-"+corpusname, data_dir=datadirectory+"/DataDownloads")

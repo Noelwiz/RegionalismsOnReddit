@@ -1,4 +1,6 @@
 import os
+import string
+import stringprep
 from zipfile import ZipFile
 
 from convokit import download
@@ -8,7 +10,7 @@ import json
 import re
 from os import path
 
-from UtilityFunctions import getTextFileNames, readSubredditSet, datadirectory, readRegionalisms
+from UtilityFunctions import getTextFileNames, readSubredditSet, datadirectory, readRegionalisms, getRegionalisms
 
 user_pattern = re.compile("/u/")
 ufile = "utterances.jsonl"
@@ -57,14 +59,34 @@ def removestopwords(filename):
     filtered = open(filename[:nameinsert_index+1] + "filtered_" + filename[nameinsert_index+1:], "a+",  errors='ignore')
 
     with open(filename, "r") as current_file:
+        regionalisms = getRegionalisms()
         for line in current_file:
-            if len(line) > 0 and line != "[deleted] <end_comment>":
+            if len(line) > 0 and not line.startswith("[deleted]") :
                 ##hopefully not a new line
                 line = line.split()
+                numwords = 0;
+                current_linewrite = list()
                 for word in line:
-                    if not word in stopwords:
-                        filtered.write(word+" ", )
-                filtered.write("\n")
+
+                    #remove urls
+                    #"(" ")"
+                    word = re.sub(r'\((https|http)?:\/\/(S)*\)', '', word)
+                    word = re.sub(r'\/(r|R)\/(S)*\s', '', word)
+
+                    if len(word) < 1:
+                        continue
+
+                    # https://stackoverflow.com/questions/265960/best-way-to-strip-punctuation-from-a-string
+                    word_noPunctuation = word.translate( str.maketrans('', '', string.punctuation))
+                    if not word_noPunctuation in stopwords:
+                        if word in regionalisms or word == "<end_comment>":
+                            current_linewrite.append(word)
+                            numwords = numwords + 1
+                        else:
+                            current_linewrite.append(word_noPunctuation)
+                            numwords = numwords + 1
+                if numwords > 1:
+                    filtered.write(" ".join(current_linewrite) + "\n")
     filtered.close()
 
 
@@ -131,6 +153,9 @@ def convertToText(corpusname, downcase=True, includebots=False, keepStickied=Tru
                 else:
                     #no post no mention
                     textfile = open(datadirectory+"/ProcessedData/" + corpusname+"_cmt_nomention.txt", "a+",  errors='ignore')
+
+            #strip out new lines
+            comment = " ".join(comment.splitlines())
             #save to text file
             textfile.write(comment+" <end_comment>\n")
             textfile.close()

@@ -33,7 +33,8 @@ def mentionsUser(comment):
 ###############################################
 def addStopWords(extrastopfile="../../data/supplementalremovedwords.txt"):
     global stopwords
-    regionalisms = readRegionalisms()
+    readRegionalisms()
+    regionalisms = getRegionalisms()
 
     extrastopfile = open(extrastopfile, "r+")
     extrastopfile_text = extrastopfile.read()
@@ -185,6 +186,7 @@ def main():
         if not os.path.exists(datadirectory+"/ProcessedData/"+corpusname):
             os.makedirs(datadirectory+"/ProcessedData/"+corpusname)
 
+        print(datadirectory+"/DataDownloads/"+corpusname+".corpus.zip")
         with ZipFile(datadirectory+"/DataDownloads/"+corpusname+".corpus.zip", mode="r") as corpuszip:
             if not os.path.exists(datadirectory+"/ProcessedData/"+corpusname+"/utterances.jsonl"):
                 corpuszip.extract("utterances.jsonl", path=datadirectory+"/ProcessedData/"+corpusname+"/")

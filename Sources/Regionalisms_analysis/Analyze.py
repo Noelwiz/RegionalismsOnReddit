@@ -72,9 +72,8 @@ def recordAudienceData(corpusname, csvwritter):
     csvwritter.writerow(towrite)
 
 
-def analyzeAudienceData(corpuslist, outfilename="results_audience", prefix=None):
-    if prefix is not None:
-        assert len(prefix) > 0
+def analyzeAudienceData(corpuslist, outfilename="results_audience", prefix=""):
+    if len(prefix) > 0:
         datafilepath = datadirectory + "/results/" + prefix + outfilename + ".csv"
     else:
         datafilepath = datadirectory + "/results/" + outfilename + ".csv"
@@ -108,6 +107,7 @@ def collectFreqData(file_name, initalkeys=[]):
         fqdist = FreqDist()
 
     if not path.exists(file_name):
+        print("no file or no data for: "+file_name)
         return FreqDist()
 
     with open(file_name, "r") as current_file:
@@ -148,9 +148,8 @@ def recordFrequencyData(corpusname, csvwritter, useLogFreq=False):
     csvwritter.writerow(towrite)
 
 
-def analyzeFrequencyData(corpuslist, outfilename="results_frequencys", prefix=None):
-    if prefix is not None:
-        assert len(prefix) > 0
+def analyzeFrequencyData(corpuslist, outfilename="results_frequencys", prefix=""):
+    if len(prefix) > 0:
         datafilepath = datadirectory + "/results/" + prefix + outfilename + ".csv"
     else:
         datafilepath = datadirectory + "/results/" + outfilename + ".csv"
@@ -355,4 +354,4 @@ def main(runAudience = True, runFrequency=True, runStats=True,runCount=True, pre
 
 
 if __name__ == "__main__":
-    main(runAudience=False,runStats=False, prefix="test2_")
+    main(runAudience=True,runStats=True, prefix="")

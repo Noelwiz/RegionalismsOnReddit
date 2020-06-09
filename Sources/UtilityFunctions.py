@@ -1,8 +1,10 @@
+from nltk import FreqDist
+
 regionalisms = set()
 datadirectory = "../../data"
 
 def getRegionalisms():
-    if len(regionalisms) < 1:
+    if len(regionalisms) > 1:
         return regionalisms
     else:
         readRegionalisms()
@@ -40,5 +42,14 @@ def getTextFileNames(corpusname, filtered=True):
 def readRegionalisms():
     regionalisms_file = open("../../data/regionalisms.txt", "r+")
     for word in regionalisms_file.readlines():
-        regionalisms.add(word.strip())
+        regionalisms.add(word.strip().lower())
     regionalisms_file.close()
+
+
+def initalizeFreqDistWithKeys(keys, smoothinglambda=0):
+    fqdist = FreqDist()
+
+    for key in keys:
+        fqdist[key] = smoothinglambda
+
+    return  fqdist

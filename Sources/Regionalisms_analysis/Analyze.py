@@ -13,7 +13,7 @@ import DataProcessing
 from DataProcessing import ProcessToText
 # https://convokit.cornell.edu/documentation/data_format.html
 from DataProcessing.ProcessToText import readRegionalisms
-from UtilityFunctions import getTextFileNames, readSubredditSet, getRegionalisms
+from UtilityFunctions import getTextFileNames, readSubredditSet, getRegionalisms, initalizeFreqDistWithKeys
 
 datadirectory = "../../data"
 
@@ -72,8 +72,12 @@ def recordAudienceData(corpusname, csvwritter):
     csvwritter.writerow(towrite)
 
 
-def analyzeAudienceData(corpuslist, outfilename="results_audience"):
-    datafilepath = datadirectory + "/results/" + outfilename + ".csv"
+def analyzeAudienceData(corpuslist, outfilename="results_audience", prefix=None):
+    if prefix is not None:
+        assert len(prefix) > 0
+        datafilepath = datadirectory + "/results/" + prefix + outfilename + ".csv"
+    else:
+        datafilepath = datadirectory + "/results/" + outfilename + ".csv"
     if not path.exists(datafilepath):
         # create an empty file
         open(datafilepath, "x").close()
@@ -96,12 +100,27 @@ def analyzeAudienceData(corpuslist, outfilename="results_audience"):
 #### analyze - frequency
 ###############################################
 
-def collectFreqData(file_name):
-    fqdist = FreqDist()
+def collectFreqData(file_name, initalkeys=[]):
+    #inital keys for use in tf-idf.
+    if (initalkeys is not None and len(initalkeys) > 0):
+        fqdist = initalizeFreqDistWithKeys(initalkeys)
+    else:
+        fqdist = FreqDist()
+
+    if not path.exists(file_name):
+        return FreqDist()
+
     with open(file_name, "r") as current_file:
         for line in current_file:
             for word in line.split():
                 fqdist[word] = fqdist.get(word, 0) + 1
+
+    fqdist["<end_comment>"] = 0
+
+    for word in initalkeys:
+        if(fqdist.get(word, 0) == 0):
+            fqdist[word] = 0
+
     return fqdist
 
 
@@ -113,7 +132,7 @@ def recordFrequencyData(corpusname, csvwritter, useLogFreq=False):
         print("recording the file: " + file)
         if path.exists(file):
             freqs = collectFreqData(file)
-            totalFQ = mergeFreqDist(freqs, totalFQ)
+            totalFQ = freqs + totalFQ
 
     towrite = dict()
     towrite["Subreddit"] = corpusname
@@ -129,8 +148,12 @@ def recordFrequencyData(corpusname, csvwritter, useLogFreq=False):
     csvwritter.writerow(towrite)
 
 
-def analyzeFrequencyData(corpuslist, outfilename="results_frequencys"):
-    datafilepath = datadirectory + "/results/" + outfilename + ".csv"
+def analyzeFrequencyData(corpuslist, outfilename="results_frequencys", prefix=None):
+    if prefix is not None:
+        assert len(prefix) > 0
+        datafilepath = datadirectory + "/results/" + prefix + outfilename + ".csv"
+    else:
+        datafilepath = datadirectory + "/results/" + outfilename + ".csv"
     fieldnames = ["Subreddit"]
 
     for word in getRegionalisms():
@@ -164,7 +187,9 @@ def recordCountData(corpusname, csvwritter):
         print("recording the file: " + file)
         if path.exists(file):
             freqs = collectFreqData(file)
-            totalFQ = mergeFreqDist(freqs, totalFQ)
+            totalFQ = freqs + totalFQ
+
+    totalFQ["<end_comment>"] = 0
 
     towrite = dict()
     towrite["Subreddit"] = corpusname
@@ -175,8 +200,12 @@ def recordCountData(corpusname, csvwritter):
     csvwritter.writerow(towrite)
 
 
-def analyzeCountData(corpuslist, outfilename="results_counts"):
-    datafilepath = datadirectory + "/results/" + outfilename + ".csv"
+def analyzeCountData(corpuslist, outfilename="results_counts", prefix=""):
+    if len(prefix) > 0:
+        datafilepath = datadirectory + "/results/" + prefix+outfilename + ".csv"
+    else:
+        datafilepath = datadirectory + "/results/" + outfilename + ".csv"
+
     fieldnames = ["Subreddit"]
 
     for word in getRegionalisms():
@@ -201,15 +230,6 @@ def analyzeCountData(corpuslist, outfilename="results_counts"):
 ###############################################
 #### stats
 ###############################################
-def mergeFreqDist(fq1, fq2):
-    combigned = fq1.copy()
-    allkeys = set(combigned.keys())
-    allkeys.union(set(fq2.keys()))
-    for word in allkeys:
-        combigned[word] = (fq2.get(word, 0) + combigned.get(word, 0))
-    return combigned
-
-
 def recordStatsData(corpusname, csvwritter):
     totalFQ = FreqDist()
     processed_corpus_texts = getTextFileNames(corpusname, filtered=False)
@@ -223,25 +243,25 @@ def recordStatsData(corpusname, csvwritter):
     if path.exists(processed_corpus_texts[0]):
         print("reading: " + processed_corpus_texts[0])
         freqs_pnm = collectFreqData(processed_corpus_texts[0])
-        totalFQ = mergeFreqDist(totalFQ, freqs_pnm)
+        totalFQ = totalFQ + freqs_pnm
         junk, numcomments_pnm = collectAudienceFreqData(processed_corpus_texts[0])
     # post mention
     if path.exists(processed_corpus_texts[1]):
         print("reading: " + processed_corpus_texts[1])
         freqs_pm = collectFreqData(processed_corpus_texts[1])
-        totalFQ = mergeFreqDist(totalFQ, freqs_pm)
+        totalFQ = totalFQ + freqs_pm
         junk, numcomments_pm = collectAudienceFreqData(processed_corpus_texts[1])
     # comment no mention
     if path.exists(processed_corpus_texts[2]):
         print("reading: " + processed_corpus_texts[2])
         freqs_cnm = collectFreqData(processed_corpus_texts[2])
-        totalFQ = mergeFreqDist(totalFQ, freqs_cnm)
+        totalFQ = totalFQ + freqs_cnm
         junk, numcomments_cnm = collectAudienceFreqData(processed_corpus_texts[2])
     # comment mention
     if path.exists(processed_corpus_texts[3]):
         print("reading: " + processed_corpus_texts[3])
         freqs_cm = collectFreqData(processed_corpus_texts[3])
-        totalFQ = mergeFreqDist(totalFQ, freqs_cm)
+        totalFQ = totalFQ + freqs_cm
         junk, numcomments_cm = collectAudienceFreqData(processed_corpus_texts[3])
 
     print("writing")
@@ -286,8 +306,12 @@ def recordStatsData(corpusname, csvwritter):
     csvwritter.writerow(towrite)
 
 
-def analyzeStatsData(corpuslist, outfilename="results_stats"):
-    datafilepath = datadirectory + "/results/" + outfilename + ".csv"
+def analyzeStatsData(corpuslist, outfilename="results_stats", prefix=""):
+    if len(prefix) > 0 :
+        datafilepath = datadirectory + "/results/" + prefix + outfilename + ".csv"
+    else:
+        datafilepath = datadirectory + "/results/" + outfilename + ".csv"
+
     fieldnames = ["Subreddit", "N", "B", "Num Utterences",
                   "N-Post", "B-Post", "Num Utterences - Post NM",
                   "N-Post with Mention", "B-Post with Mention", "Num Utterences - Post M",
@@ -308,20 +332,27 @@ def analyzeStatsData(corpuslist, outfilename="results_stats"):
         recordStatsData(corpus, csvwriter)
     csvfile.close()
 
-
 ###############################################
 #### main
 ###############################################
-def main():
+def main(runAudience = True, runFrequency=True, runStats=True,runCount=True, prefix=""):
     readRegionalisms()
     # to select subreddits to process, add their name to the CurrentSubredditSet file
     toAnalyze = readSubredditSet()
     print(toAnalyze)
-    analyzeAudienceData(toAnalyze)
-    analyzeFrequencyData(toAnalyze)
-    analyzeStatsData(toAnalyze)
-    analyzeCountData(toAnalyze)
+    if runAudience:
+        print("Analyzing Audience")
+        analyzeAudienceData(toAnalyze, prefix=prefix)
+    if runFrequency:
+        print("Analyzing Word Frequency")
+        analyzeFrequencyData(toAnalyze, prefix=prefix)
+    if runStats:
+        print("Recording Metadata")
+        analyzeStatsData(toAnalyze, prefix=prefix)
+    if runCount:
+        print("Recording Word Counts")
+        analyzeCountData(toAnalyze, prefix=prefix)
 
 
 if __name__ == "__main__":
-    main()
+    main(runAudience=False,runStats=False, prefix="test2_")

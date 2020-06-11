@@ -15,7 +15,7 @@ def readSubredditSet():
     with open(datadirectory + "/CurrentSubredditSet.txt", "r") as subredditfiles:
         subreddits = list()
         for subreddit in subredditfiles.readlines():
-            if not subreddit.startswith("#") and len(subreddit) > 1:
+            if not subreddit.startswith("#") and not subreddit.isspace():
                 subreddits.append(subreddit.strip())
     return subreddits
 

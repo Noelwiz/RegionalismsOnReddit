@@ -186,6 +186,9 @@ def main():
         if not os.path.exists(datadirectory+"/ProcessedData/"+corpusname):
             os.makedirs(datadirectory+"/ProcessedData/"+corpusname)
 
+        if os.path.exists(datadirectory+"/DataDownloads/subreddit-"+corpusname+".zip") and not os.path.exists(datadirectory+"/DataDownloads/"+corpusname+".corpus.zip"):
+            os.rename(datadirectory+"/DataDownloads/subreddit-"+corpusname+".zip", datadirectory+"/DataDownloads/"+corpusname+".corpus.zip")
+
         print(datadirectory+"/DataDownloads/"+corpusname+".corpus.zip")
         with ZipFile(datadirectory+"/DataDownloads/"+corpusname+".corpus.zip", mode="r") as corpuszip:
             if not os.path.exists(datadirectory+"/ProcessedData/"+corpusname+"/utterances.jsonl"):

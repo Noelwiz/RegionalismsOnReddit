@@ -1,3 +1,100 @@
-yiff
+#Furry stuff for internet sub culture comparason later
 furry
 furry_irl
+#Gaming internet culture
+#warning, this is very big, so it's commented out.
+#gaming
+
+
+###irl places
+##south
+#florida, I think there's a north/south split to be noticed here.
+florida
+Tallahassee
+tampa
+tampabay
+orlando
+Miami
+
+#Kentucky
+Kentucky
+Louisville
+
+#new orleans is very distinctive
+Louisiana
+Atlanta
+NewOrleans
+NOLA
+
+#texas
+texas
+houstontx
+houstongamers
+houston
+Dallas
+
+##north east
+#main
+Maine
+PortlandMaine
+
+#DC
+washingtondc
+
+#illinois
+chicago
+chicagogamers
+
+#ohio
+Ohio
+cincinnati
+
+#pennsylvania
+Pennsylvania
+philadelphia
+
+#massachysetts
+massachusetts
+boston
+BostonGaming
+BostonGaymers
+
+#new york
+nyc
+nycgaymers
+
+
+##middle north
+#oklahoma is very distinctive on dialect maps I've seen.
+#both pronunceation, and dialect
+#https://aschmann.net/AmEng/#LargeMap4Right
+#http://www.muturzikin.com/cartesusa/usa.htm
+oklahoma
+okc
+
+#Minisota appears to have a north/south split like florida.
+minnesota
+Minneapolis
+
+#iowa
+Iowa
+IowaCity
+desmoines
+
+##west coast
+#California
+California
+LosAngeles
+sanfrancisco
+
+#washington
+Washington
+Bellingham
+Seattle
+SeattleWA
+bellevue
+
+#oregon
+oregon
+Portland
+PortlandGaming

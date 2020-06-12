@@ -12,7 +12,7 @@ heart
 retweet
 hashtag
 seattle
-washginton
+washington
 florida
 tallahassee
 orlando

@@ -161,3 +161,8 @@ traffic circle
 highway
 sun shower
 sneakers
+fireflies
+lightning bugs
+dude
+bro buddy fella
+pal

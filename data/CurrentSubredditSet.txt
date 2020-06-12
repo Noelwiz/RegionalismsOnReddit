@@ -1,5 +1,6 @@
 #Furry stuff for internet sub culture comparason later
 furry
+yiff
 furry_irl
 #Gaming internet culture
 #warning, this is very big, so it's commented out.
@@ -52,6 +53,7 @@ cincinnati
 #pennsylvania
 Pennsylvania
 philadelphia
+pittsburgh
 
 #massachysetts
 massachusetts

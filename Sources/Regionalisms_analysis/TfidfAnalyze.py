@@ -13,37 +13,38 @@ datadirectory = "../../data"
 
 
 def getUniqueWords(subredditname):
-    datafilepath = datadirectory + "/ProcessedData/" + subredditname+"_words" + ".txt"
+    wordfile_path = datadirectory + "/ProcessedData/" + subredditname+"_words" + ".txt"
 
-    words = set()
-    subredditFreq = FreqDist()
+    set_of_words = set()
+    freq_subreddit = FreqDist()
 
-    if not path.exists(datafilepath):
+    if not path.exists(wordfile_path):
         for datafile in getTextFileNames(subredditname):
             if path.exists(datafile):
                 print("reading " + datafile)
-                subredditFreq = collectFreqData(subredditname) + subredditFreq
+                freq_subreddit = collectFreqData(datafile) + freq_subreddit
             else:
                 print("no data for "+datafile)
-        words = subredditFreq.keys()
-        for i in subredditFreq.most_common(20):
+
+        for i in freq_subreddit.most_common(20):
             print(i)
 
-        with open(datafilepath, "a+") as wordfile:
-            for word in words:
-                word.strip()
-                word.lower()
+        with open(wordfile_path, "a+") as wordfile:
+            for word in freq_subreddit.keys():
+                word = word.strip()
+                word = word.lower()
+                set_of_words.add(word)
                 wordfile.write(word + "\n")
+        return set_of_words
     else:
-        with open(datafilepath, "r") as wordfile:
+        with open(wordfile_path, "r") as wordfile:
             #read line by line
-            print("reading "+ datafilepath)
+            print("reading "+ wordfile_path)
             for word in wordfile:
-                word.strip()
-                word.lower()
-                words.add(word)
-
-    return  words
+                word = word.strip()
+                word = word.lower()
+                set_of_words.add(word)
+            return set_of_words
 ###############################################
 #### tf-idf
 ###############################################
@@ -61,30 +62,30 @@ def computeIDF(docFreqDistros, allwords): #todo: args
 
     """in: list of frequency distros by subreddit, out: IDF for all words that are keys"""
     N = len(docFreqDistros)
+    print("There are "+ str(len(docFreqDistros))+" documents. ")
 
     idfDict = dict.fromkeys(allwords,0)
     for distro in docFreqDistros:
-        for word in idfDict.keys():
-            if distro.get(word, 0):
-                idfDict[word] += 1
+        for word in distro.keys():
+            word = word.lower().strip() #should be unessiccary
+            if distro.get(word, 0) > 0:
+                idfDict[word] = idfDict.get(word, 0) + 1
 
-    for word in idfDict.keys():
-        idfDict[word] = math.log(N/float(idfDict.get(word)))
+    for word, value in idfDict.items():
+        idfDict[word] = math.log(N/float(value))
     return idfDict
 
 
 #https://towardsdatascience.com/natural-language-processing-feature-engineering-using-tf-idf-e8b9d00e7e76
-def computeTFIDF(wordfreqs, idfscores):
-    tfidf_scores = dict()
+def computeTFIDF(wordfreqs, idfscores, allwords):
+    tfidf_scores = dict().fromkeys(allwords,0)
 
     for word in wordfreqs.keys():
-        if idfscores.get(word, 0) == 0:
-            print("warning: no entries in idf scores for "+word)
         tfidf_scores[word] = wordfreqs.get(word, 0)*idfscores.get(word,0)
     return  tfidf_scores
 
 
-def recordAllTFIDF(tfidfscore, subredditname, outfilename="all_tfidfscores" ,prefix=""):
+def recordAllTFIDF(tfidfscore, subredditname, fieldnames, outfilename="all_tfidfscores" ,prefix=""):
     if len(prefix) > 0 :
         datafilepath = datadirectory + "/results/" + prefix + outfilename + ".csv"
     else:
@@ -92,8 +93,7 @@ def recordAllTFIDF(tfidfscore, subredditname, outfilename="all_tfidfscores" ,pre
 
     tfidfscore = tfidfscore.copy()
     tfidfscore["Subreddit"] = subredditname
-    fieldnames= ["Subreddit"]
-    fieldnames.extend(tfidfscore.keys())
+
 
     if not path.exists(datafilepath):
         # create an empty file
@@ -110,16 +110,19 @@ def recordAllTFIDF(tfidfscore, subredditname, outfilename="all_tfidfscores" ,pre
     csvfile.close()
 
 
-def recordRegionalismTFIDF(tfidfscore, subredditname, outfilename="regionalism_tfidfscores" ,prefix=""):
+def recordRegionalismTFIDF(tfidfscore, subredditname, fieldnames, outfilename="regionalism_tfidfscores" ,prefix=""):
     if len(prefix) > 0 :
         datafilepath = datadirectory + "/results/" + prefix + outfilename + ".csv"
     else:
         datafilepath = datadirectory + "/results/" + outfilename + ".csv"
 
-    tfidfscore = tfidfscore.copy()
-    tfidfscore["Subreddit"] = subredditname
-    fieldnames= ["Subreddit"]
-    fieldnames.extend(getRegionalisms().keys())
+    print("recording tf-idf scores in "+datafilepath)
+
+    towrite = dict()
+    towrite["Subreddit"] = subredditname
+
+    for word in fieldnames:
+        towrite[word] = tfidfscore.get(word, 0)
 
     if not path.exists(datafilepath):
         # create an empty file
@@ -132,8 +135,19 @@ def recordRegionalismTFIDF(tfidfscore, subredditname, outfilename="regionalism_t
         csvfile = open(datafilepath, "a", newline='')
         csvwriter = csv.DictWriter(csvfile, fieldnames, restval=0, dialect='excel')
 
-    csvwriter.writerow(tfidfscore)
+    csvwriter.writerow(towrite)
     csvfile.close()
+
+
+def getRegionalismsOnlyCSVKeys():
+    fieldnames = ["Subreddit"]
+    fieldnames.extend(getRegionalisms())
+    return  fieldnames
+
+def getAllWordCSVKeys(allWords):
+    fieldnames = ["Subreddit"]
+    fieldnames = fieldnames.extend(allWords)
+    return fieldnames
 
 ###############################################
 #### main
@@ -149,7 +163,7 @@ def main(prefix=""):
     for subreddit in toAnalyze:
         numprevwords = len(allwords)
         print("num unique words: "+str(numprevwords))
-        allwords.union(getUniqueWords(subreddit))
+        allwords = allwords.union(getUniqueWords(subreddit))
         print(subreddit+" added "+str(len(allwords) - numprevwords)+" words.")
 
     print("in total, there are " + str(len(allwords)) + " words in the vector.")
@@ -158,9 +172,12 @@ def main(prefix=""):
     frequenceylist = list()
     for subreddit in toAnalyze:
         currentfreq = initalizeFreqDistWithKeys(allwords)
+        print("num keys in frequency: "+str(len(currentfreq.keys())))
         for file in getTextFileNames(subreddit):
-            currentfreq += collectFreqData(file)
+            currentfreq = collectFreqData(file) + currentfreq
         frequenceylist.append(currentfreq)
+
+        print("currently, there are "+str(len(currentfreq.keys())) + "unique words in "+subreddit)
 
     idf_scores = computeIDF(frequenceylist, allwords)
 
@@ -168,11 +185,15 @@ def main(prefix=""):
 
     #problem, don't know what goes with what.
     for frequency in frequenceylist:
-        tfidf_scores.append(computeTFIDF(frequency, idf_scores))
+        tfidf_scores.append(computeTFIDF(frequency, idf_scores, allwords))
 
+
+    csv_keys = getRegionalismsOnlyCSVKeys()
+    #csv_keys = getAllWordCSVKeys(allwords)
 
     for i in range(len(toAnalyze)):
-        recordRegionalismTFIDF(tfidf_scores[i], toAnalyze[i])
+        recordRegionalismTFIDF(tfidf_scores[i], toAnalyze[i], csv_keys)
+        #recordAllTFIDF(tfidf_scores[i], toAnalyze[i], csv_keys)
 
 if __name__ == "__main__":
-    main(prefix="fur")
+    main()

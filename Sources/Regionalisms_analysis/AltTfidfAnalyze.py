@@ -4,7 +4,27 @@ from UtilityFunctions import getRegionalisms, readRegionalisms
 
 datafolder = "../../data"
 
+
+def countDocumentOcurences(subreddit_data, word):
+    count = 0
+    for sub in subreddit_data:
+        if float(sub.get(word, -1.0)) > 0:
+            count = count + 1
+    return count
+
+
+def calculateIDF(subreddit_data, word, N):
+    numdocswithword = countDocumentOcurences(subreddit_data, word)
+    if numdocswithword > 0 :
+        return math.log(N / float(numdocswithword))
+    else:
+        print("WARNING, tried to calculate tfidf score of a word without any occurences.")
+        return 0
+
+
 def main(frequencyCSV="results_frequencys.csv"):
+    # based off of https://towardsdatascience.com/natural-language-processing-feature-engineering-using-tf-idf-e8b9d00e7e76
+    # edited to suit my needs here
     readRegionalisms()
     frequencyCSV_path= datafolder+"/Results/"+frequencyCSV
     regionalisms = getRegionalisms()
@@ -18,24 +38,14 @@ def main(frequencyCSV="results_frequencys.csv"):
 
     #should now have a thing of frequencies.
     #calc idf:
-
     N = len(subreddit_data)
     print("analyzing "+str(N)+" subreddits.")
     for word in regionalisms:
-
         if word == "Subreddit":
             continue
 
-        count = 0
-        for sub in subreddit_data:
-            if float(sub.get(word, -1.0)) > 0:
-                count += 1
-        idfscore[word] = count
+        idfscore[word] = calculateIDF(subreddit_data, word,  N)
 
-
-    for word in idfscore.keys():
-        if(float(idfscore[word]) != 0):
-            idfscore[word] = math.log(N / float(idfscore[word]))
 
     output = list()
     for i in range(N):

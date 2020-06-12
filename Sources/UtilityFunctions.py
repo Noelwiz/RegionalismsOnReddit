@@ -39,6 +39,11 @@ def getTextFileNames(corpusname, filtered=True):
     return filenames
 
 
+def getCountFileName(corpusname, unigram=True):
+    if unigram:
+        return datadirectory + "/ProcessedData/" + "count_unigram_" + corpusname + ".txt"
+    else:
+        return datadirectory + "/ProcessedData/" + "count_bigram_" + corpusname + ".txt"
 
 def readRegionalisms():
     regionalisms_file = open("../../data/regionalisms.txt", "r+")

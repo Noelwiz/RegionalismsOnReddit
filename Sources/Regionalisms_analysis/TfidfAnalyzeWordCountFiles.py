@@ -59,7 +59,7 @@ def chooseScoreRange(tfidf_scores):
 
 
 #1 2 4 5
-def outputResults(tfidf, score_range=(0.000004,0.00007), prefix=" "):
+def outputResults(tfidf, score_range=(0.000004,0.00007), prefix="ignore"):
     subredditname = tfidf[0]
     scores =tfidf[1]
     regionalisms = getRegionalisms()

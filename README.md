@@ -57,3 +57,16 @@ https://convokit.cornell.edu/documentation/subreddit.html
 Alternatively the data will automatically be downloaded when you run the the ProcessToText.py file that pre-processes the data. 
 <br>
 To choose the subreddits used, edit the data/CurrentSubredditSet.txt file and write the names of subreddits, which are case sensitive, on their own line. All the scripts use this file to choose what to work with.
+
+# Future Work and Spinoff Ideas
+First of all, this project needs some named entity recognition to strip out proper nouns that fill it up. Currently (6/13/2020), the TF-IDF based filtering works great, especially when you add more subreddits, but the data is largely filled with local politicians, street names, and places. On the one hand, I'm extremely happy it's finding local stuff, including the regionalisms, on the other hand, it's unusable other than as proof that the idea works.<br>
+- [ ] Proper Noun removal with named entitiy recognition
+- [ ] Number removal (while still allowing ascii faces, or words in the regionalisms.txt to remain
+- [ ] Better bot detection and removal
+- [ ] Better URL removal
+- [ ] Make the package more user friendly, and allow for integration with other projects. 
+<br><br>
+I failed to get to my goal of dynamically identifying that range of tf-idf values which would be important in making this useful, however it might still be fine as long as you have a city with known regionalisms to set the tf-idf score range with. <br><br>
+I really wanted to use this project as a spring board for looking at linguistic similarities between internet communities, so, getting some working hirearchical document classification would be really nice.
+<br><br>
+In a similar vain, mapping terms would be another cool spinoff. There are plenty of linguistic maps for how spoken language varies, but not vocabulary. The only part remaining for this would be a way to go from a subreddit's name to a location on a map, and then coloring the map.<br><br>

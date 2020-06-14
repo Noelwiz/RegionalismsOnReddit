@@ -39,17 +39,20 @@ courtesy of https://www.pghcitypaper.com/pittsburgh/pittsburghese-dictionary-how
 # Setup:
 ## Dependencys:
 Natural Language Toolkit (NLTK)
-pip install nltk
+```pip install nltk```
 https://www.nltk.org/
 
 Convo Kit
-pip install convokit
+```pip install convokit```
 https://convokit.cornell.edu/documentation/tutorial.html
 
 ## Downloading/Selecting Data
 To download the corpus files, you can download them directly from [this](https://zissou.infosci.cornell.edu/convokit/datasets/subreddit-corpus/corpus-zipped/) alphabetical index. Then move the zipped files into the data/DataDownloads folder. 
+
+
 See the following link for more information:
 https://convokit.cornell.edu/documentation/subreddit.html
+
 
 Alternatively the data will automatically be downloaded when you run the the ProcessToText.py file that pre-processes the data. 
 

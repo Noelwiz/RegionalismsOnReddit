@@ -1,8 +1,6 @@
 # RegionalismsOnReddit
-<p style="text-align: center;">
 **Identifying regionalisms and when they're used on Reddit.com**<br>
 A repo for my Sociolinguistics and NLP final projects.
- </p> 
 <br><br>
 There are two main goals of this project. The first goal is to try and detect in what context people use regionalisms the most on reddit. For this analysis I used Umashanthi Pavalanathan, and Jacob Eisenstein's paper [Audience-Modulated Variation in Online Social Media](https://www.semanticscholar.org/paper/AUDIENCE-MODULATED-VARIATION-IN-ONLINE-SOCIAL-MEDIA-Pavalanathan-Eisenstein/9559f5cb044b1a6320225dd8b754adcbf1b20efe) to augment my inital list of informal regionalisms and for comparason.
 <br><br>

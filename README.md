@@ -1,9 +1,9 @@
 # RegionalismsOnReddit
 **Identifying regionalisms and when they're used on Reddit.com**
 A repo for my Sociolinguistics and NLP final projects.
-<br>
-There are two main goals of this project. The first goal is to try and detect in what context people use regionalisms the most on reddit. For this analysis I used Umashanthi Pavalanathan, and Jacob Eisenstein's paper [Audience-Modulated Variation in Online Social Media]https://www.semanticscholar.org/paper/AUDIENCE-MODULATED-VARIATION-IN-ONLINE-SOCIAL-MEDIA-Pavalanathan-Eisenstein/9559f5cb044b1a6320225dd8b754adcbf1b20efe) to augment my inital list of informal regionalisms and for comparason.
-<br>
+<br><br>
+There are two main goals of this project. The first goal is to try and detect in what context people use regionalisms the most on reddit. For this analysis I used Umashanthi Pavalanathan, and Jacob Eisenstein's paper [Audience-Modulated Variation in Online Social Media](https://www.semanticscholar.org/paper/AUDIENCE-MODULATED-VARIATION-IN-ONLINE-SOCIAL-MEDIA-Pavalanathan-Eisenstein/9559f5cb044b1a6320225dd8b754adcbf1b20efe) to augment my inital list of informal regionalisms and for comparason.
+<br><br>
 The second goal of this project is to automatically detect and identify regionalisms in reddit comments. To do this, I used TF-IDF scores and known regionalisms to identify a range of values that regionalisms were likely to occur between and extracted all words within that range. 
 
 # Example - Finding out where and how much pitsburgeese is used
@@ -38,11 +38,11 @@ courtesy of https://www.pghcitypaper.com/pittsburgh/pittsburghese-dictionary-how
 
 # Setup:
 ## Dependencys:
-[Natural Language Toolkit (NLTK)](https://www.nltk.org/)
+[Natural Language Toolkit (NLTK)](https://www.nltk.org/)<br>
 ```pip install nltk```
 
 
-[Convo Kit](https://convokit.cornell.edu/documentation/tutorial.html)
+[Convo Kit](https://convokit.cornell.edu/documentation/tutorial.html)<br>
 ```pip install convokit```
 
 

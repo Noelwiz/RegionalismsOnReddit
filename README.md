@@ -1,12 +1,42 @@
 # RegionalismsOnReddit
-A repo for my Sociolinguistics and NLP final projects. Currently a WIP, that I haven't had time to clean up
+**Identifying regionalisms and when they're used on Reddit.com**
+A repo for my Sociolinguistics and NLP final projects.
 
-NOTE: Work in progress. the code needs to be cleaned up still
+There are two main goals of this project. The first goal is to try and detect in what context people use regionalisms the most on reddit. For this analysis I used Umashanthi Pavalanathan, and Jacob Eisenstein's paper [Audience-Modulated Variation in Online Social Media]https://www.semanticscholar.org/paper/AUDIENCE-MODULATED-VARIATION-IN-ONLINE-SOCIAL-MEDIA-Pavalanathan-Eisenstein/9559f5cb044b1a6320225dd8b754adcbf1b20efe) to augment my inital list of informal regionalisms and for comparason.
 
-Made for Python 3.8.
+The second goal of this project is to automatically detect and identify regionalisms in reddit comments. To do this, I used TF-IDF scores and known regionalisms to identify a range of values that regionalisms were likely to occur between and extracted all words within that range. 
 
-Dependencys:
-NLTK
+# Example - Finding out where and how much pitsburgeese is used
+1. Replace the contents of data/CurrentSubredditSet.txt with "pittsburgh" which is a big Pittsburgh subreddit
+1. Replace the contents of data/regionalisms.txt with the following
+```
+n’at
+slippy
+crik
+jagoff
+nebby
+buggy
+sweeper
+sweepers
+yinz
+yinzers
+gumband
+dippy
+aht
+```
+courtesy of https://www.pghcitypaper.com/pittsburgh/pittsburghese-dictionary-how-to-translate-the-yinzer-vocabulary/Content?oid=14838287
+1. Run ProcessToText.py to preprocess the text, this will take a few minutes.
+1. Run Analyze.py
+You should then get a few .csv files in the data/results folder to look at with how often each of those words is used
+* results_audience.csv is how often one of the words is used in different contexts. 
+* results_frequencys.csv is how frequent each of these words is used.
+* results_counts.csv is the number of occurences 
+* results_stats.csv is metadata, like how many words were in the data.
+
+
+# Setup:
+## Dependencys:
+Natural Language Toolkit (NLTK)
 pip install nltk
 https://www.nltk.org/
 
@@ -14,17 +44,11 @@ Convo Kit
 pip install convokit
 https://convokit.cornell.edu/documentation/tutorial.html
 
-
-getting this code to run:
-Either recreate my file structure based on the file locations in the code
-or, you can adjust the code to work with what you setup. I used one list
-of files which were the unzipped corpuses downloaded from this index
-https://zissou.infosci.cornell.edu/convokit/datasets/subreddit-corpus/corpus-zipped/
-see the following link for more information
+## Downloading/Selecting Data
+To download the corpus files, you can download them directly from [this](https://zissou.infosci.cornell.edu/convokit/datasets/subreddit-corpus/corpus-zipped/) alphabetical index. Then move the zipped files into the data/DataDownloads folder. 
+See the following link for more information:
 https://convokit.cornell.edu/documentation/subreddit.html
 
-original file structure of data:
-data/
- - (state name)
- - - subreddit.corpus
- - - sometimes had a subfolder for a city with multiple subreddits, and then the subreddit.corpus inside that
+Alternatively the data will automatically be downloaded when you run the the ProcessToText.py file that pre-processes the data. 
+
+To choose the subreddits used, edit the data/CurrentSubredditSet.txt file and write the names of subreddits, which are case sensitive, on their own line. All the scripts use this file to choose what to work with.
